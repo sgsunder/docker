@@ -1,0 +1,12 @@
+version: '3.1'
+services:
+  proxy:
+    build:
+      context: ..
+      dockerfile: reverseproxy/Dockerfile
+    restart: unless-stopped
+    ports:
+      - 80:80
+    network_mode: host
+    volumes:
+      - ./proxylist.conf:/proxylist.conf:ro
