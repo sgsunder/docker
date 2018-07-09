@@ -1,41 +1,24 @@
-# BUILD using context = https://github.com/janeczku/calibre-web.git
-
 # Image built without GDrive support to save space
 # (expected that users will use docker volumes for deployment instead)
-
 FROM python:alpine
-
-# Get Depenencies
-RUN apk --no-cache add \
-        git \
-        imagemagick \
-        imagemagick-dev \
-    && \
-    pip --no-cache-dir install -U \
-        "Babel>=1.3" \
-        "Flask-Babel>=0.11.1" \
-        "Flask-Login>=0.3.2" \
-        "Flask-Principal>=0.3.2" \
-        "singledispatch>=3.4.0.0" \
-        "backports_abc>=0.4" \
-        "Flask>=0.11" \
-        "iso-639>=0.4.5" \
-        "PyPDF2==1.26.0" \
-        "pytz>=2016.10" \
-        "requests>=2.11.1" \
-        "SQLAlchemy>=0.8.4" \
-        "tornado>=4.1" \
-        "Wand>=0.4.4" \
-        "unidecode>=0.04.19" \
-    && exit 0
 
 # Make Application User and Directory Structure
 ARG PUID=1000
 ARG PGID=1000
+WORKDIR /opt/app
 RUN addgroup -g ${PGID} app && \
     adduser -D -g '' -G app -u ${PUID} app && \
     mkdir -p /opt/app/vendor /books && \
     chown app:app /opt/app /opt/app/vendor /books
+
+# Get Depenencies
+COPY --chown=app:app src/requirements.txt ./requirements.txt
+RUN apk --no-cache add \
+        imagemagick \
+        imagemagick-dev \
+    && \
+    pip --no-cache-dir install -U -r requirements.txt
+
 USER app
 
 # Install KindleGen
@@ -47,14 +30,8 @@ RUN wget -q -O - "${KINDLEGEN_URL}" | \
     chmod 0755 /opt/app/vendor/kindlegen
 
 # Copy Application Files
-ARG APP_REPO="https://github.com/janeczku/calibre-web.git"
-ARG APP_COMMIT="a06748e"
-RUN git clone --depth 1 --quiet "${APP_REPO}" /tmp/app && \
-    cd /tmp/app && \
-    git checkout ${APP_COMMIT} . && \
-    cp cps.py babel.cfg messages.pot /opt/app && \
-    cp -R cps /opt/app/ && \
-    rm -rf /tmp/app
+COPY --chown=app:app src/cps.py src/babel.cfg src/messages.pot ./
+COPY --chown=app:app src/cps/ ./cps/
 
 # Final Touches
 VOLUME ["/books"]
