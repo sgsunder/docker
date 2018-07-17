@@ -18,6 +18,44 @@
 
 set -o nounset                              # Treat unset variables as an error
 
+### initsmbconf: initialize the smb.conf file
+# Arguments:
+#   none)
+# Return: result
+initsmbconf() { local file=/etc/samba/smb.conf
+    echo "[global]" > $file
+    echo "   workgroup = MYGROUP" >> $file
+    echo "   server string = Samba Server" >> $file
+    echo "   server role = standalone server" >> $file
+    echo "   log file = /dev/stdout" >> $file
+    echo "   max log size = 50" >> $file
+    echo "   dns proxy = no" >> $file
+    echo "   pam password change = yes" >> $file
+    echo "   map to guest = bad user" >> $file
+    echo "   usershare allow guests = yes" >> $file
+    echo "   create mask = 0664" >> $file
+    echo "   force create mode = 0664" >> $file
+    echo "   directory mask = 0775" >> $file
+    echo "   force directory mode = 0775" >> $file
+    echo "   force user = smbuser" >> $file
+    echo "   force group = users" >> $file
+    echo "   follow symlinks = yes" >> $file
+    echo "   load printers = no" >> $file
+    echo "   printing = bsd" >> $file
+    echo "   printcap name = /dev/null" >> $file
+    echo "   disable spoolss = yes" >> $file
+    echo "   socket options = TCP_NODELAY" >> $file
+    echo "   strict locking = no" >> $file
+    echo "   vfs objects = recycle" >> $file
+    echo "   recycle:keeptree = yes" >> $file
+    echo "   recycle:versions = yes" >> $file
+    echo "   min protocol = SMB2" >> $file
+    echo "" >> $file
+    echo "" >> $file
+    chmod +x $file
+}
+
+
 ### charmap: setup character mapping for file/directory names
 # Arguments:
 #   chars) from:to character mappings separated by ','
@@ -152,95 +190,34 @@ widelinks() { local file=/etc/samba/smb.conf \
     sed -i 's/\(follow symlinks = yes\)/'"$replace"'/' $file
 }
 
-### usage: Help
-# Arguments:
-#   none)
-# Return: Help text
-usage() { local RC="${1:-0}"
-    echo "Usage: ${0##*/} [-opt] [command]
-Options (fields in '[]' are optional, '<>' are required):
-    -h          This help
-    -c \"<from:to>\" setup character mapping for file/directory names
-                required arg: \"<from:to>\" character mappings separated by ','
-    -g \"<parameter>\" Provide global option for smb.conf
-                    required arg: \"<parameter>\" - IE: -g \"log level = 2\"
-    -i \"<path>\" Import smbpassword
-                required arg: \"<path>\" - full file path in container
-    -n          Start the 'nmbd' daemon to advertise the shares
-    -p          Set ownership and permissions on the shares
-    -r          Disable recycle bin for shares
-    -S          Disable SMB2 minimum version
-    -s \"<name;/path>[;browse;readonly;guest;users;admins;writelist;comment]\"
-                Configure a share
-                required arg: \"<name>;</path>\"
-                <name> is how it's called for clients
-                <path> path to share
-                NOTE: for the default value, just leave blank
-                [browsable] default:'yes' or 'no'
-                [readonly] default:'yes' or 'no'
-                [guest] allowed default:'yes' or 'no'
-                [users] allowed default:'all' or list of allowed users
-                [admins] allowed default:'none' or list of admin users
-                [writelist] list of users that can write to a RO share
-                [comment] description of share
-    -u \"<username;password>[;ID;group]\"       Add a user
-                required arg: \"<username>;<passwd>\"
-                <username> for user
-                <password> for user
-                [ID] for user
-                [group] for user
-    -w \"<workgroup>\"       Configure the workgroup (domain) samba should use
-                required arg: \"<workgroup>\"
-                <workgroup> for samba
-    -W          Allow access wide symbolic links
+# Create an smb.conf file
+initsmbconf
 
-The 'command' (if provided and valid) will be run instead of samba
-" >&2
-    exit $RC
-}
-
+# Set Permissions
 [[ "${PUID:-""}" =~ ^[0-9]+$ ]] && usermod -u $PUID -o smbuser
 [[ "${PGID:-""}" =~ ^[0-9]+$ ]] && groupmod -g $PGID -o users
 
-while getopts ":hc:g:i:nprs:Su:Ww:" opt; do
-    case "$opt" in
-        h) usage ;;
-        c) charmap "$OPTARG" ;;
-        g) global "$OPTARG" ;;
-        i) import "$OPTARG" ;;
-        n) NMBD="true" ;;
-        p) PERMISSIONS="true" ;;
-        r) recycle ;;
-        s) eval share $(sed 's/^/"/; s/$/"/; s/;/" "/g' <<< $OPTARG) ;;
-        S) smb ;;
-        u) eval user $(sed 's/^/"/; s/$/"/; s/;/" "/g' <<< $OPTARG) ;;
-        w) workgroup "$OPTARG" ;;
-        W) widelinks ;;
-        "?") echo "Unknown option: -$OPTARG"; usage 1 ;;
-        ":") echo "No argument value for option: -$OPTARG"; usage 2 ;;
-    esac
-done
-shift $(( OPTIND - 1 ))
-
+# Read Configuration Variables
 [[ "${CHARMAP:-""}" ]] && charmap "$CHARMAP"
-[[ "${GLOBAL:-""}" ]] && global "$GLOBAL"
+for varname in $(env | awk -F "=" '{print $1}' | grep -i "GLOBAL_*"); do
+  eval "input=\$$varname"
+  global "$input"
+done
 [[ "${IMPORT:-""}" ]] && import "$IMPORT"
 [[ "${PERMISSIONS:-""}" ]] && perms
 [[ "${RECYCLE:-""}" ]] && recycle
-[[ "${SHARE:-""}" ]] && eval share $(sed 's/^/"/; s/$/"/; s/;/" "/g' <<< $SHARE)
+for varname in $(env | awk -F "=" '{print $1}' | grep -i "SHARE_*"); do
+  eval "input=\$$varname"
+  eval share $(sed 's/^/"/; s/$/"/; s/;/" "/g' <<< $input)
+done
 [[ "${SMB:-""}" ]] && smb
-[[ "${USER:-""}" ]] && eval user $(sed 's/^/"/; s/$/"/; s/;/" "/g' <<< $USER)
+for varname in $(env | awk -F "=" '{print $1}' | grep -i "USER_*"); do
+  eval "input=\$$varname"
+  eval user $(sed 's/^/"/; s/$/"/; s/;/" "/g' <<< $input)
+done
 [[ "${WORKGROUP:-""}" ]] && workgroup "$WORKGROUP"
 [[ "${WIDELINKS:-""}" ]] && widelinks
 
-if [[ $# -ge 1 && -x $(which $1 2>&-) ]]; then
-    exec "$@"
-elif [[ $# -ge 1 ]]; then
-    echo "ERROR: command not found: $1"
-    exit 13
-elif ps -ef | egrep -v grep | grep -q smbd; then
-    echo "Service already running, please restart container to apply changes"
-else
-    [[ ${NMBD:-""} ]] && ionice -c 3 nmbd -D
-    exec ionice -c 3 smbd -FS </dev/null
-fi
+# Start the samba service
+[[ ${NMBD:-""} ]] && ionice -c 3 nmbd -D
+exec ionice -c 3 smbd -FS </dev/null

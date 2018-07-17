@@ -1,7 +1,7 @@
 FROM alpine:3.7
 LABEL maintainer "Shyam Sunder <sgsunder1@gmail.com>"
 
-# Get System Depenencies
+# Get System Depenencies, Set Application User
 RUN apk --no-cache add \
         bash \
         samba \
@@ -11,11 +11,10 @@ RUN apk --no-cache add \
  && rm -rf /tmp/*
 
 # Copy Files Over
-COPY smb.conf /etc/samba/
-COPY samba.sh samba-reader.sh /usr/bin/
+COPY samba.sh /init
 
 # Final Touches
-CMD ["/usr/bin/samba-reader.sh"]
+CMD ["/init"]
 EXPOSE 137/udp 138/udp 139 445
 
 # Healthcheck to verify server state

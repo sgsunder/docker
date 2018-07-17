@@ -14,77 +14,47 @@ docker run -it --name samba -p 139:139 -p 445:445 \
            -d sgsunder/samba
 ```
 
-### Start an instance with users and shares:
+### Configuration via environment variables
+(fields in `[]` are optional, `<>` are required)
 
-A config file must be provided containing the below flags:
-
-An example config file:
-
-    -u "example1;badpass" \
-    -u "example2;badpass" \
-    -s "public;/share" \
-    -s "users;/srv;no;no;no;example1,example2" \
-    -s "example1 private;/example1;no;no;no;example1" \
-    -s "example2 private;/example2;no;no;no;example2"
-
-The file should be passed to the container as a docker secret called `samba_config`
-Alternativly, the config file may be either bind mounted to `/run/secrets/samba_config`
-
-## Configuration
-Options (fields in `[]` are optional, `<>` are required):
-
-```
--h          This help
--c "<from:to>" setup character mapping for file/directory names
-            required arg: "<from:to>" character mappings separated by ','
--g "<parameter>" Provide global option for smb.conf
-            required arg: "<parameter>" - IE: -g "log level = 2"
--i "<path>" Import smbpassword
-            required arg: "<path>" - full file path in container
--n          Start the 'nmbd' daemon to advertise the shares
--p          Set ownership and permissions on the shares
--r          Disable recycle bin for shares
--S          Disable SMB2 minimum version
--s "<name;/path>[;browse;readonly;guest;users;admins;writelist;comment]"
-            Configure a share
-            required arg: "<name>;</path>"
-            <name> is how it's called for clients
-            <path> path to share
-            NOTE: for the default values, just leave blank
-            [browsable] default:'yes' or 'no'
-            [readonly] default:'yes' or 'no'
-            [guest] allowed default:'yes' or 'no'
-            [users] allowed default:'all' or list of allowed users
-            [admins] allowed default:'none' or list of admin users
-            [writelist] list of users that can write to a RO share
-            [comment] description of share
--u "<username;password>[;ID;group]"       Add a user
-            required arg: "<username>;<passwd>"
-            <username> for user
-            <password> for user
-            [ID] for user
-            [group] for user
--w "<workgroup>" Configure the workgroup (domain) samba should use
-            required arg: "<workgroup>"
-            <workgroup> for samba
--W          Allow access wide symbolic links
-```
-
-
-### Environment Variables (only available with `docker run`)
-
- * `CHARMAP` - As above, configure character mapping
- * `GLOBAL` - As above, configure a global option
- * `IMPORT` - As above, import a smbpassword file
- * `NMBD` - As above, enable nmbd
- * `PERMISSIONS` - As above, set file permissions on all shares
- * `RECYCLE` - As above, disable recycle bin
- * `SHARE` - As above, setup a share
- * `SMB` - As above, disable SMB2 minimum version
+ * `CHARMAP` - Setup character mapping for file/directory names.
+    * Format: `<from:to>`, character mappings separated by `,`
+ * `GLOBAL_*` - Provide global option for `smb.conf`.
+    * You can specify multiple of these, in the form
+    `GLOBAL_1`, `GLOBAL_B`, `GLOBAL_FOO`, etc.
+    * Example: `-g "log level = 2"`.
+ * `IMPORT` - Import a bind mounted `smbpassword` file or Docker secret.
+    * Format: `/path/to/smbpassword/file`.
+ * `PERMISSIONS` - If set, set ownership and permissions on the shares.
+ * `RECYCLE` - If set, disable recycle bin for shares.
+ * `USER_*` - Setup a user.
+    * Format: `<username;password>[;ID;group]`, seperated with semicolons.
+    * Required: `username` and `password`.
+    * Optional: `ID` for user.
+    * Optional: `group` for user.
+    * Example 1: `example1;badpass`
+    * Example 2: `example2;badpass`
+ * `SHARE_*` - Configure a share.
+    * Format: `<name;/path>[;browse;readonly;guest;users;admins;writelist;comment]`,
+    seperated with semicolons.
+    * Required: `name` and `path`
+    * The rest is optional, leave blank for defaults.
+    * `browsable`: default `yes` or `no`.
+    * `readonly`: default `yes` or `no`.
+    * `guest`: allowed default `yes` or `no`.
+    * `users`: allowed default `all` or list of allowed users.
+    * `admins`: allowed default `none` or list of admin users.
+    * `writelist`: list of users that can write to a read-only share.
+    * `comment`: Description of share.
+    * Example 1: `public;/share`
+    * Example 2: `users;/srv;no;no;no;example1,example2`
+    * Example 3: `example1 private;/example1;no;no;no;example1`
+    * Example 4: `example2 private;/example2;no;no;no;example2`
+ * `WIDELINKS` - If set, allow access wide symbolic links
+ * `WORKGROUP` - Configure the workgroup (domain) samba should use.
+ * `NMBD` - If set, start the 'nmbd' daemon to advertise the shares.
+ * `SMB` - If set, disable SMB2 minimum version.
  * `TZ` - Set a timezone, IE `EST5EDT`
- * `USER` - As above, setup a user
- * `WIDELINKS` - As above, allow access wide symbolic links
- * `WORKGROUP` - As above, set workgroup
  * `PUID` - Set the UID for the samba server
  * `PGID` - Set the GID for the samba server
 
