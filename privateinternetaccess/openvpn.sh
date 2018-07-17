@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright (c) 2017 ItsDaSpecialK & colinherbert
+# https://bitbucket.org/ItsDaSpecialK/docker-openvpn
 
 set -e -u -o pipefail
 

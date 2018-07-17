@@ -1,4 +1,5 @@
 #!/bin/sh
+# Copyright (c) 2018 Shyam Sunder
 output_file="/etc/nginx/conf.d/generated.conf"
 
 # File Template
@@ -19,7 +20,7 @@ location @XScriptName@ {
 }
 EOF
 
-# Generate configs from proxylist.conf file
+# Generate configs
 for varname in $(env | awk -F "=" '{print $1}' | grep -i "proxy_*"); do
   eval "input=\$$varname"
   # Parse input arguments

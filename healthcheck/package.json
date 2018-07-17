@@ -1,7 +1,7 @@
 {
   "name": "sysstatus",
   "version": "0.0.1",
-  "description": "Simple API to fetch server status over HTML ",
+  "description": "Simple API to fetch server status over HTML",
   "main": "server.js",
   "scripts": {
     "test": "node server.js && curl localhost:3000/status",
