@@ -1,0 +1,4 @@
+#!/usr/bin/execlineb -P
+s6-setuidgid app
+cd /config
+mkdir -p session settings torrents users

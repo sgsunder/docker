@@ -1,0 +1,9 @@
+**/.git
+**/.gitignore
+**/.github
+**/.gitattributes
+**/.gitmodules
+**/*.md
+src/conf
+docker-compose.yml
+nginx.conf
