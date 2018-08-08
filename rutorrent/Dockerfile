@@ -38,8 +38,10 @@ RUN echo "Using UID ${PUID} and GID ${PGID}" \
 COPY --chown=app:app src/ /var/www/rutorrent/
 
 # Patch Files
-COPY snoopy.patch /patches/snoopy.patch
-RUN cd /var/www/rutorrent/php && patch < /patches/snoopy.patch
+RUN sed -i.old \
+        -e 's#($this->port == 80 ? \"\" : \":\"\.$this->port)#\":\"\.$this->port#' \
+        -e 's#\.($this->port == 443 ? \"\" : \":\"\.$this->port)##' \
+        /var/www/rutorrent/php/Snoopy.class.inc
 
 # Add Runtime Files
 COPY root/ /
