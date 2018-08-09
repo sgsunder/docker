@@ -41,6 +41,17 @@ app.get('/status', (req, res) => {
     arch: os.arch()
   }
 
+  // Get load averages
+  let loads = os.loadavg();
+  output.load = {
+    load1:  parseInt(loads[0]*100)/100,
+    load5:  parseInt(loads[1]*100)/100,
+    load15: parseInt(loads[2]*100)/100
+  }
+
+  // Get memory usage
+  output.ram = parseInt(100*(1 - (os.freemem() / os.totalmem())));
+
   if (process.argv.includes('--zfs')) {
     output.zfs = {};
 
@@ -54,6 +65,8 @@ app.get('/status', (req, res) => {
       items = raw.split('\n')[0].split('\t');
       output.zfs.used = parseInt(items[1]);
       output.zfs.avail = parseInt(items[2]);
+      output.zfs.percent =
+        parseInt(100*output.zfs.used/(output.zfs.used+output.zfs.avail));
     }));
   }
 
