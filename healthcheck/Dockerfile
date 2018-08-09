@@ -15,5 +15,5 @@ RUN npm install \
 COPY server.js ./
 
 # Final Touches
-CMD ["node", "server.js", "--zfs"]
+CMD ["node", "server.js", "--zfs", "--drivehealth"]
 EXPOSE 3000

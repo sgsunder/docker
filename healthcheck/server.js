@@ -52,8 +52,71 @@ app.get('/status', (req, res) => {
   // Get memory usage
   output.ram = parseInt(100*(1 - (os.freemem() / os.totalmem())));
 
+  // --------------------------
+  // Drive Health
+  if (process.argv.includes('--drivehealth')) {
+    cmds.push(fetchFromCommand('cat /opt/drivehealth.json', raw => {
+        let drivehealth = JSON.parse(raw);
+
+        // Fetch Time
+        let t = new Date(1970, 0, 1);
+        t.setSeconds(drivehealth.time);
+
+        // Fetch Temperatures and Drive Health Status
+        let totalTemp = 0;
+        let maxTemp = 0;
+        let tempCount = 0;
+        let failingDrives = [];
+        Object.keys(drivehealth).forEach((key, index) => {
+            let item = drivehealth[key];
+            if (item instanceof Object) {
+                if ('temp' in item) {
+                    totalTemp += item.temp;
+                    tempCount++;
+                    maxTemp = item.temp > maxTemp ? item.temp : maxTemp;
+                }
+                if ('smart' in item) {
+                    if (item.smart != 'passed') {
+                        failingDrives.append(
+                            '' + key + ' has message: ' + item.smart);
+                    }
+                }
+            }
+        });
+
+        output.drives = {
+            time: t,
+            temp: {
+                max: maxTemp,
+                avg: parseInt(totalTemp/tempCount)
+            },
+            message: failingDrives.length === 0 ?
+                'all drives are healthy' : failingDrives.join(', ')
+        }
+    }));
+  }
+
+  // --------------------------
+  // ZFS
   if (process.argv.includes('--zfs')) {
     output.zfs = {};
+
+    // Get ARC statistics
+    cmds.push(fetchFromCommand(
+            'awk \'{print $1, $3}\' < /proc/spl/kstat/zfs/arcstats', raw => {
+        let arcstats = {};
+        raw.split(os.EOL).map(item => {
+            let splitItem = item.split(' ');
+            arcstats[splitItem[0]] = parseInt(splitItem[1]);
+        });
+
+        // limit output
+        output.zfs.arc = {
+            hits: arcstats.hits,
+            misses: arcstats.misses,
+            size: arcstats.size
+        }
+    }));
 
     // Summary of pool status
     cmds.push(fetchFromCommand('zpool status -x', raw => {
