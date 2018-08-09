@@ -12,6 +12,7 @@ RUN npm install \
  && rm -f package-lock.json
 
 # Copy Application Files
+COPY index.html ./static/index.html
 COPY server.js ./
 
 # Final Touches

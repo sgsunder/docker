@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!-- https://github.com/katalysatorn/MSEdge-StartPage -->
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<title>// DECKARD</title>
+	<style>
+		body {
+			background-color: #242424;
+			font-family: 'Roboto', sans-serif;
+		}
+
+		a {
+			text-decoration: none;
+			color: #e2e2e2;
+		}
+
+		a#special {
+			text-decoration: none;
+			color: inherit;
+		}
+
+		a#footer {
+			text-decoration: none;
+			color: inherit;
+		}
+
+		a:hover {
+			color: white;
+		}
+
+		table {
+			color: #999999;
+			text-align: center;
+			margin: auto;
+			padding-top: 15vh;
+		}
+
+		td {
+			padding: 10px 35px;
+		}
+
+		th {
+			padding: 30px;
+		}
+
+		p {
+			color: #999999;
+			position: absolute;
+			bottom: 0px;
+			right: 0px;
+			padding: 5px;
+			margin: 0px;
+			text-align: right;
+			font-size: small;
+		}
+
+		span.numcrit {
+			color: #e0332a;
+		}
+
+		span.numwarn {
+			color: #e8be37;
+		}
+
+		span.numsafe {
+			color: #74ef32;
+		}
+
+		span.other {
+			font-size: smaller;
+		}
+	</style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<body>
+	<table id="t_links">
+	</table>
+	<table id="t_info">
+		<tr>
+			<td id="load"></td>
+			<td id="mem"></td>
+			<td id="stor"></td>
+			<td id="disk"></td>
+		</tr>
+	</table>
+	<p>
+		<a href="#" id="footer">
+			<span id="drivehealth"></span><br />
+			<span id="sys-info">Loading...</span>
+		</a>
+	</p>
+	<script>
+		$(() => {
+			getSites();
+			getHealth();
+			const looper = setInterval(getHealth, 3000);
+		});
+
+		function getSites() {
+			$.get('/api/sitelist', fullTable => {
+				tableLooper(fullTable, table => {
+					let insideHtml = '';
+					for (let i = 0; i < table.length; i++) {
+						insideHtml += `<tr>`;
+						for (let j = 0; j < table[i].length; j++) {
+							insideHtml +=
+								`<td><a href="${table[i][j].link}">
+								${table[i][j].name}</a></td>`;
+						}
+						insideHtml += `</tr>`;
+					}
+					$('#t_links').html(insideHtml);
+				});
+			});
+		}
+
+		function tableLooper(all_tables, callback) {
+			const tableNames = Object.keys(all_tables);
+			let currentTable = 0;
+			callback(all_tables[tableNames[currentTable]]); // Initialize the table on page load
+			document.getElementById('footer').onclick = () => {
+				if (++currentTable >= tableNames.length) {
+					currentTable = 0
+				}
+				callback(all_tables[tableNames[currentTable]]); // Update the table on click
+			}
+		}
+
+		function getHealth() {
+			$.get('/api/status', data => {
+				$('#load').html(
+					`${colorNums(data.load.load5, 0.80, 0.40)}
+								<span class="other">load</span>`
+				);
+				$('#mem').html(
+					`${colorNums(data.ram, 75, 40)}%
+								<span class="other">memory</span>`
+				);
+				$('#stor').html(
+					`${colorNums(data.zfs.percent, 80, 60)}%
+								<span class="other">storage</span>`
+				);
+				$('#disk').html(
+					`${colorNums(data.drives.temp.max, 40, 30)}°C
+								<span class="other">max hdd</span>`
+				);
+				$('#drivehealth').html(
+					`${data.zfs.short} and ${data.drives.message}`
+				);
+				$('#sys-info').html(
+					`Up for ${data.uptime}`
+				);
+				$('#splitter').html(
+					`<td colspan="4"> <hr /> </td>`
+				);
+			});
+		}
+
+		function colorNums(x, crit, warn) {
+			if (x >= crit) {
+				return `<span class="numcrit">${x}</span>`
+			} else if (x >= warn) {
+				return `<span class="numwarn">${x}</span>`
+			} else {
+				return `<span class="numsafe">${x}</span>`
+			}
+		}
+	</script>
+</body>
+
+</html>

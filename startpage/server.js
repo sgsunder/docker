@@ -3,11 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const os = require('os');
 const prettyMs = require('pretty-ms');
+const exec = require('child_process').exec;
+const fs = require('fs');
 
 // boilerplate to async run a shell command
 function fetchFromCommand(cmd, after) {
   return new Promise((p_res, p_rej) => {
-    const exec = require('child_process').exec;
     exec(cmd, (error, stdout, stderr) => {
       if (error) {
         console.warn(stderr);
@@ -20,14 +21,41 @@ function fetchFromCommand(cmd, after) {
   });
 }
 
+function fetchFromFile(file, after) {
+  return new Promise((p_res, p_rej) => {
+    fs.readFile(file, (error, data) => {
+      if (error) {
+        p_rej(error);
+      } else {
+        after(data);
+        p_res();
+      }
+    });
+  });
+}
+
 let app = express();
 app.use(cors());
 
-app.get('/', (req, res) => {
-  res.send('Server API available on /status');
+// app.get('/', (req, res) => {
+//   res.send('Server API available on /status');
+// });
+//
+// app.get('/api/sitelist' (req, res) => {
+//
+// });
+
+app.use('/', express.static('/opt/app/static'));
+
+// app.use('/api/sitelist', express.static('/opt/app/sitelist.json'));
+app.get('/api/sitelist', (req, res) => {
+    output = {};
+    fetchFromFile('/opt/app/sitelist.json', raw => {
+        output = JSON.parse(raw);
+    }).then(val => { res.send(output) });
 });
 
-app.get('/status', (req, res) => {
+app.get('/api/status', (req, res) => {
   let output = {};
   let cmds = [];
 
@@ -55,7 +83,7 @@ app.get('/status', (req, res) => {
   // --------------------------
   // Drive Health
   if (process.argv.includes('--drivehealth')) {
-    cmds.push(fetchFromCommand('cat /opt/drivehealth.json', raw => {
+    cmds.push(fetchFromFile('/opt/app/drivehealth.json', raw => {
         let drivehealth = JSON.parse(raw);
 
         // Fetch Time
