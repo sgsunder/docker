@@ -1,3 +1,4 @@
 #!/usr/bin/with-contenv sh
-[[ -e /config/session/rtorrent.lock ]] && \
-	rm /config/session/rtorrent.lock
+if [ -e /config/session/rtorrent.lock ]; then
+	rm -v /config/session/rtorrent.lock
+fi

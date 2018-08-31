@@ -1,3 +1,2 @@
 #!/usr/bin/with-contenv sh
-exec /usr/bin/screen -D -m -S rtorrent s6-setuidgid app \
-	/usr/bin/rtorrent -n -o import=/etc/rtorrent/rtorrent.rc
+exec /usr/bin/rtorrent -n -o import=/etc/rtorrent/rtorrent.rc

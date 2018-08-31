@@ -20,7 +20,6 @@ RUN echo "Using UID ${PUID} and GID ${PGID}" \
         rtorrent \
         # runtime tools
         rsync \
-        screen \
         # plugin tools
         ffmpeg \
         geoip \
