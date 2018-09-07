@@ -28,10 +28,25 @@ RUN addgroup -g ${PGID} app \
  && exit 0
 
 # Get App Depenencies
-COPY --chown=app:app src/requirements.txt ./requirements.txt
-RUN pip --no-cache-dir install -U -r requirements.txt \
- && apk --no-cache add imagemagick
+RUN pip --no-cache-dir install \
+		# From src/requirements.txt
+		Babel>=1.3 \
+		Flask-Babel>=0.11.1 \
+		Flask-Login>=0.3.2 \
+		Flask-Principal>=0.3.2 \
+		singledispatch>=3.4.0.0 \
+		backports_abc>=0.4 \
+		Flask>=0.11 \
+		iso-639>=0.4.5 \
+		PyPDF2==1.26.0 \
+		pytz>=2016.10 \
+		requests>=2.11.1 \
+		SQLAlchemy>=1.1.0 \
+		tornado>=4.1 \
+		Wand>=0.4.4 \
+		unidecode>=0.04.19
 
+# Switch to app user from here on
 USER app
 
 # Install KindleGen
