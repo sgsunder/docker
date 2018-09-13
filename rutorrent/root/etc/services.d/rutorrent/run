@@ -1,4 +1,0 @@
-#!/usr/bin/with-contenv sh
-exec /usr/bin/rtorrent \
-	-n -o import=/etc/rtorrent/rtorrent.rc \
-	-i $(wget -qO- http://icanhazip.com/)

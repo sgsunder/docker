@@ -1,3 +1,0 @@
-#!/usr/bin/execlineb -P
-s6-setuidgid app
-mkdir -pv /config/session /config/settings /config/torrents /config/users

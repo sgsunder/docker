@@ -1,2 +1,0 @@
-#!/usr/bin/execlineb -P
-/usr/bin/rsync -rptk --delete-before /var/www/rutorrent/ /webroot
