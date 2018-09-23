@@ -1,5 +1,13 @@
 FROM php:7-fpm-alpine
 
+# Install s6 overlay
+ARG OVERLAY_VERSION="v1.21.4.0"
+ARG OVERLAY_ARCH="amd64"
+RUN wget -q -O - \
+        "https://github.com/just-containers/s6-overlay/releases/download/${OVERLAY_VERSION}/s6-overlay-${OVERLAY_ARCH}.tar.gz" \
+        | tar -xz -f - -C /
+ENTRYPOINT ["/init"]
+
 # Install Application Requirements
 ARG PUID=1000
 ARG PGID=1000
@@ -40,4 +48,3 @@ COPY root/ /
 # Final Touches
 EXPOSE 3000 5000 51413 6881/udp
 VOLUME /config /downloads
-CMD ["/init"]

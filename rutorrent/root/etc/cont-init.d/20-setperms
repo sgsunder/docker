@@ -1,0 +1,2 @@
+#!/usr/bin/execlineb -P
+chown -R app:app /downloads /config
