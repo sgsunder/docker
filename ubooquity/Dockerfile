@@ -19,7 +19,7 @@ RUN mkdir -p \
 USER app
 
 # Fetch and Install Sources
-ARG APP_VER="2.1.1"
+ARG APP_VER="2.1.2"
 RUN wget -q -O /tmp/app.zip \
         "http://vaemendis.net/ubooquity/downloads/Ubooquity-${APP_VER}.zip" \
  && unzip /tmp/app.zip -d /opt/app \
