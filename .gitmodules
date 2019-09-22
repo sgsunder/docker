@@ -1,6 +1,3 @@
-[submodule "calibre-web/src"]
-	path = calibre-web/src
-	url = https://github.com/janeczku/calibre-web.git
 [submodule "rutorrent/src"]
 	path = rutorrent/src
 	url = https://github.com/Novik/ruTorrent.git
